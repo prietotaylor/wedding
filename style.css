@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
 
 * {
   box-sizing: border-box;
@@ -7,9 +7,10 @@
 }
 
 body {
-  font-family: 'Manufacturing Consent', sans-serif;
+  font-family: 'UnifrakturCook', cursive;
   background-color: #fff;
   color: #000;
+  font-weight: 700;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,7 +18,7 @@ body {
   min-height: 100vh;
   padding: 2rem;
   text-align: center;
-  letter-spacing: 0.05em; /* increases kerning slightly */
+  letter-spacing: 0.03em; /* increases kerning slightly */
 }
 
 h1, h2 {
