@@ -1,4 +1,3 @@
-/* Import a punk-style font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
 
 * {
@@ -9,8 +8,8 @@
 
 body {
   font-family: 'Manufacturing Consent', sans-serif;
-  background-color: #111;
-  color: #f4f4f4;
+  background-color: #fff;
+  color: #000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,61 +17,54 @@ body {
   min-height: 100vh;
   padding: 2rem;
   text-align: center;
+  letter-spacing: 0.05em; /* increases kerning slightly */
 }
 
 h1, h2 {
-  color: #ff0055;
   text-transform: uppercase;
-  letter-spacing: 1px;
   margin-bottom: 1rem;
+  letter-spacing: 0.1em;
 }
 
 p, li {
   font-size: 1rem;
   line-height: 1.5;
   margin-bottom: 1rem;
+  letter-spacing: 0.05em;
 }
 
 ul {
-  list-style-type: square;
-  padding-left: 1.5rem;
-}
-
-header, section, footer {
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 2rem;
-  background-color: #1e1e1e;
-  padding: 1.5rem;
-  border: 2px dashed #ff0055;
-  border-radius: 8px;
+  list-style: none;
+  padding-left: 0;
 }
 
 form input, form button {
   display: block;
   width: 100%;
-  margin: 0.5rem 0;
+  max-width: 300px;
+  margin: 0.5rem auto;
   padding: 0.75rem;
-  background: #000;
-  color: #f4f4f4;
-  border: 2px solid #ff0055;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
   font-size: 1rem;
+  letter-spacing: 0.05em;
 }
 
 form button {
   cursor: pointer;
-  background: #ff0055;
+  background: #000;
   color: #fff;
   font-weight: bold;
-  text-transform: uppercase;
   transition: background 0.3s ease;
 }
 
 form button:hover {
-  background: #ff3366;
+  background: #333;
 }
 
 footer {
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: 0.85rem;
+  margin-top: 2rem;
+  opacity: 0.7;
 }
