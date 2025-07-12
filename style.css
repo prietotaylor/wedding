@@ -112,56 +112,65 @@ footer {
   color: #fff;
 }
 
-/* Base flower shape */
+/* Base flower container */
 .flower {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  background: radial-gradient(circle at center, #000 40%, transparent 41%);
-  border-radius: 50%;
+  width: 60px;
+  height: 60px;
   z-index: 1;
 }
 
-/* Create petals by adding pseudo-elements and rotating */
+/* One petal */
 .flower::before,
 .flower::after {
   content: '';
   position: absolute;
-  width: 50px;
-  height: 50px;
-  background: radial-gradient(circle at center, #000 40%, transparent 41%);
-  border-radius: 50%;
+  width: 30px;
+  height: 60px;
+  background: #000;
+  border-radius: 50% 50% 50% 50%;
   top: 0;
-  left: 0;
+  left: 15px;
 }
 
-/* One petal rotated */
+/* Rotate one petal */
 .flower::before {
   transform: rotate(45deg);
 }
 
-/* Another petal rotated */
+/* Rotate the second petal */
 .flower::after {
   transform: rotate(-45deg);
 }
 
-/* Specific placement and slight variations */
+/* Add more petals using extra elements inside */
+.flower::after {
+  transform: rotate(-45deg);
+}
+
+/* You can use box-shadow to simulate additional petals */
+.flower::before {
+  box-shadow: 
+    0 0 0 0 #000,
+    -20px 10px 0 0 #000,
+    20px 10px 0 0 #000,
+    0px 25px 0 0 #000;
+}
+
+/* Randomized positions */
 .flower1 {
-  top: 10%;
-  left: 5%;
-  transform: scale(1.2) rotate(10deg);
+  top: 8%;
+  left: 4%;
 }
 
 .flower2 {
-  top: 80%;
-  right: 8%;
-  transform: scale(0.9) rotate(-15deg);
+  bottom: 12%;
+  right: 6%;
 }
 
 .flower3 {
   top: 20%;
-  right: 15%;
-  transform: scale(1.1) rotate(30deg);
+  right: 10%;
 }
 
 
