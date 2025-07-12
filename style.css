@@ -68,3 +68,38 @@ footer {
   margin-top: 2rem;
   opacity: 0.7;
 }
+
+.floating-link {
+  position: absolute;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #000;
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #000;
+  letter-spacing: 0.05em;
+  z-index: 10;
+}
+
+.link1 {
+  top: 5%;
+  left: 10%;
+  transform: rotate(-10deg);
+}
+
+.link2 {
+  bottom: 10%;
+  right: 12%;
+  transform: rotate(6deg);
+}
+
+.link3 {
+  top: 15%;
+  right: 8%;
+  transform: rotate(-3deg);
+}
+
+.floating-link:hover {
+  background: #000;
+  color: #fff;
+}
