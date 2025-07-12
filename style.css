@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap'); */
+
+@font-face {
+  font-family: 'kingarthurlegend';
+  src: url('fonts/kingarthurlegend.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 * {
   box-sizing: border-box;
@@ -7,7 +14,7 @@
 }
 
 body {
-  font-family: 'UnifrakturCook', cursive;
+  font-family: 'kingarthurlegend', sans-serif;
   background-color: #fff;
   color: #000;
   font-weight: 700;
