@@ -112,21 +112,54 @@ footer {
   color: #fff;
 }
 
+body {
+  position: relative;
+  background: #fff;
+  color: #000;
+  padding: 2rem;
+  min-height: 100vh;
+  font-family: 'Manufacturing Consent', serif;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Intricate vertical woven borders */
 body::before,
 body::after {
-  content: "";
+  content: '';
   position: fixed;
   top: 0;
+  width: 25px;
   height: 100%;
-  width: 20px;
-  background: repeating-linear-gradient(
-    45deg,
-    #000,
-    #000 6px,
-    #fff 6px,
-    #fff 12px
-  );
   z-index: -1;
+  background: 
+    repeating-linear-gradient(
+      135deg,
+      #000,
+      #000 3px,
+      #fff 3px,
+      #fff 6px,
+      #000 6px,
+      #000 9px,
+      #fff 9px,
+      #fff 12px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      #000,
+      #000 3px,
+      #fff 3px,
+      #fff 6px,
+      #000 6px,
+      #000 9px,
+      #fff 9px,
+      #fff 12px
+    );
+  background-size: 100% 100%;
+  background-blend-mode: overlay;
+  opacity: 0.9;
 }
 
 body::before {
