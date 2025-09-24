@@ -139,6 +139,12 @@ footer {
   transform: rotate(-3deg);
 }
 
+.link4 {
+  bottom: 20%;
+  left: 8%;
+  transform: rotate(-10deg);
+}
+
 .floating-link:hover {
   background: #000;
   color: #fff;
