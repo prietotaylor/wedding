@@ -10,6 +10,41 @@
 
 body {
   font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
+  background: url('https://tse3.mm.bing.net/th/id/OIP.zys2wHGH6sKGJxZJ0SoJZQHaGD?rs=1&pid=ImgDetMain&o=7&rm=3') no-repeat center center fixed; 
+  background-size: cover;
+  color: #000;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+
+/* Add a faded overlay */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7); /* White tint with 70% opacity */
+  z-index: 0;
+}
+
+/* Ensure content sits above the faded overlay */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+body {
+  font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
   background-color: #fff;
   color: #000;
   font-weight: 400;
