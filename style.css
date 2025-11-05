@@ -149,3 +149,31 @@ footer {
   background: #000;
   color: #fff;
 }
+
+/* --- Center the floating links toward the middle on larger screens --- */
+.link1 { top: 38vh; left: 30%; transform: rotate(-6deg); }
+.link2 { top: 44vh; left: 70%; transform: rotate(6deg); }
+.link3 { top: 52vh; left: 40%; transform: rotate(-3deg); }
+.link4 { top: 60vh; left: 60%; transform: rotate(4deg); }
+
+/* Keep them within view on very short screens */
+@media (max-height: 650px) {
+  .link1 { top: 30vh; }
+  .link2 { top: 36vh; }
+  .link3 { top: 44vh; }
+  .link4 { top: 52vh; }
+}
+
+/* --- Mobile: stack links below the header (no overlap with title) --- */
+@media (max-width: 640px) {
+  .floating-link {
+    position: static;          /* exit absolute positioning */
+    display: inline-block;
+    margin: 0.4rem 0.5rem;
+    transform: none;           /* remove rotations on small screens */
+  }
+
+  header {
+    margin-bottom: 0.75rem;    /* a little breathing room above links */
+  }
+}
