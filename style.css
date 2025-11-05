@@ -10,8 +10,11 @@
 
 body {
   font-family: 'Vollkorn', 'Times New Roman', serif;
-  background: url('dg.png') no-repeat center center fixed; 
-  background-size: cover;
+  background-image: url('dg.png');
+  background-repeat: repeat;         /* ✅ makes the image tile */
+  background-position: center top;   /* start pattern nicely */
+  background-attachment: fixed;      /* stays put on scroll (optional) */
+  background-size: auto;             /* use natural image size for repeat */
   color: #000;
   font-weight: 400;
   display: flex;
