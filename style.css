@@ -1,5 +1,5 @@
-/* Import EB Garamond from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap');
+/* Import Vollkorn from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;500;600;700&display=swap');
 
 /* Reset */
 * {
@@ -9,7 +9,7 @@
 }
 
 body {
-  font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
+  font-family: 'Vollkorn', 'Times New Roman', serif;
   background: url('hands.png') no-repeat center center fixed; 
   background-size: cover;
   color: #000;
@@ -44,7 +44,7 @@ body > * {
 }
 
 body {
-  font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
+  font-family: 'Vollkorn', 'Times New Roman', serif;
   background-color: #fff;
   color: #000;
   font-weight: 400;
@@ -87,7 +87,7 @@ form input, form button {
   color: #000;
   font-size: 1rem;
   letter-spacing: 0.05em;
-  font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
+  font-family: 'Vollkorn', 'Times New Roman', serif;
 }
 
 form button {
@@ -118,7 +118,7 @@ footer {
   border: 1px solid #000;
   letter-spacing: 0.05em;
   z-index: 10;
-  font-family: 'EB Garamond', Garamond, "Times New Roman", serif;
+  font-family: 'Vollkorn', 'Times New Roman', serif;
 }
 
 .link1 {
@@ -149,4 +149,3 @@ footer {
   background: #000;
   color: #fff;
 }
-
