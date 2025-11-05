@@ -176,6 +176,39 @@ footer {
     transform: none;           /* remove rotations on small screens */
   }
 
+  /* Small devices in landscape: don't absolutely position the links */
+@media (max-width: 900px) and (orientation: landscape) {
+  .floating-link {
+    position: static;          /* exit absolute positioning */
+    top: auto; left: auto;     /* clear earlier absolute coords */
+    right: auto; bottom: auto;
+    display: inline-flex;      /* nicer button sizing */
+    align-items: center;
+    justify-content: center;
+    margin: 0.35rem 0.5rem;
+    padding: 0.5rem 0.75rem;
+    transform: none;           /* remove quirky rotations */
+    white-space: nowrap;       /* keep labels from breaking */
+    font-size: clamp(12px, 2vw, 16px); /* avoid giant/squished text */
+  }
+
+  header { 
+    margin-bottom: 0.5rem;     /* breathing room above the buttons */
+  }
+}
+
+/* Extra safety net: apply the mobile stacking for very short viewports */
+@media (max-height: 420px) {
+  .floating-link {
+    position: static;
+    top: auto; left: auto; right: auto; bottom: auto;
+    display: inline-flex;
+    transform: none;
+    margin: 0.35rem 0.5rem;
+    font-size: clamp(12px, 2vw, 16px);
+  }
+}
+
   header {
     margin-bottom: 0.75rem;    /* a little breathing room above links */
   }
