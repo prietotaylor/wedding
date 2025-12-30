@@ -21,33 +21,36 @@ body {
   padding: clamp(1rem, 3vw, 2rem);
   position: relative;
 
-  /* Center everything on the page */
+  /* Center the whole layout on the page */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Faded overlay */
+/* Faded overlay (visual only) */
 body::before {
   content: "";
   position: absolute;
   inset: 0;
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 0;
+  pointer-events: none; /* ✅ don't block clicks */
 }
 
-/* Content above overlay */
-.page {
+/* ✅ Ensure ALL page content sits above the overlay (even pages without .page) */
+body > * {
   position: relative;
   z-index: 1;
-
-  width: min(100%, 980px);
-  margin: 0 auto;
-
-  /* overall centered feel */
-  text-align: center;
 }
 
+/* Page wrapper */
+.page {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  text-align: center; /* overall centered feel */
+}
+
+/* Typography */
 h1, h2 {
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -64,21 +67,24 @@ header {
   margin-bottom: 1.25rem;
 }
 
-/* Two-column layout (centered as a unit) */
+/* --- Two-column layout (closer together + centered as a unit) --- */
 .two-col {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr);
-  gap: clamp(1rem, 3vw, 2rem);
+
+  /* narrower columns + closer gap */
+  grid-template-columns: 320px 320px;
+  gap: 1rem;
+
+  justify-content: center; /* center the two columns as a unit */
   align-items: start;
 
   width: 100%;
   margin: 1.5rem auto;
 }
 
-/* Left-align the contents inside each column */
+/* Left-align content inside columns */
 #schedule,
-.link-panel,
-#rsvp {
+.link-panel {
   text-align: left;
 }
 
@@ -91,20 +97,22 @@ header {
   margin-bottom: 0.5rem;
 }
 
-/* Links: straight list + small individual white boxes */
+/* Links list */
 .link-list {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-top: 2.25rem; /* aligns roughly with schedule list under "Schedule" */
+  margin-top: 2.25rem; /* roughly lines up with schedule list under h2 */
   padding-left: 0;
 }
 
+/* Small individual white boxes for links */
 .link-list a {
-  display: inline-block;          /* prevents one big box */
-  width: fit-content;             /* box hugs the text */
+  display: inline-block;  /* prevents one big box */
+  width: fit-content;     /* hug the text */
   max-width: 100%;
+
   text-decoration: none;
   color: #000;
 
@@ -121,7 +129,37 @@ header {
   outline: none;
 }
 
-/* RSVP form */
+/* Reusable small boxed link (for registry page, etc.) */
+.small-box-link {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid #000;
+  padding: 0.25rem 0.5rem;
+  color: #000;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+
+.small-box-link:hover,
+.small-box-link:focus-visible {
+  background: #000;
+  color: #fff;
+  outline: none;
+}
+
+/* --- RSVP centered --- */
+#rsvp {
+  text-align: center;   /* center heading + form block */
+  margin-top: 1rem;
+}
+
+#rsvp form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* center inputs/buttons */
+}
+
+/* Form */
 form input, form button {
   display: block;
   width: 100%;
@@ -155,7 +193,7 @@ footer {
   text-align: center;
 }
 
-/* Responsive: stack columns on smaller screens (including rotation) */
+/* --- Responsive: stack columns cleanly on smaller screens + rotation --- */
 @media (max-width: 720px) {
   body {
     align-items: flex-start; /* easier scrolling on small screens */
@@ -163,9 +201,18 @@ footer {
 
   .two-col {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
+  /* remove the alignment offset when stacked */
   .link-list {
-    margin-top: 0.75rem; /* remove the alignment offset when stacked */
+    margin-top: 0.75rem;
+  }
+
+  /* make columns not feel too wide */
+  #schedule,
+  .link-panel {
+    max-width: 520px;
+    margin: 0 auto;
   }
 }
