@@ -19,7 +19,6 @@ body {
 
   min-height: 100vh;
   padding: clamp(1rem, 3vw, 2rem);
-
   position: relative;
 }
 
@@ -36,7 +35,6 @@ body::before {
 .page {
   position: relative;
   z-index: 1;
-
   width: min(100%, 980px);
   margin: 0 auto;
 }
@@ -72,12 +70,10 @@ section {
   margin: 1.5rem 0;
 }
 
-/* Panels (schedule + links) */
-.panel {
-  border: 1px solid #000;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 1rem;
-  text-align: left; /* <-- key: left aligned content inside columns */
+/* Left align the two columns */
+#schedule,
+.link-panel {
+  text-align: left;
 }
 
 /* Schedule list */
@@ -89,37 +85,31 @@ section {
   margin-bottom: 0.5rem;
 }
 
-/* Links list: straight, left-justified, stable */
+/* Links: straight, left-justified, NO boxes */
 .link-list {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 2.25rem; /* pushes links down to roughly align with schedule list */
+  padding-left: 0;
 }
 
 .link-list a {
-  display: block;
-  width: 100%;
-  text-decoration: none;
+  text-decoration: underline; /* classic hyperlink look */
   color: #000;
-
-  background: #fff;
-  border: 1px solid #000;
-  padding: 0.6rem 0.75rem;
-
-  letter-spacing: 0.05em;
-  text-align: left; /* <-- left-justified hyperlinks */
+  display: inline;
 }
 
 .link-list a:hover,
 .link-list a:focus-visible {
-  background: #000;
-  color: #fff;
+  text-decoration-thickness: 2px;
   outline: none;
 }
 
 /* RSVP form */
+#rsvp { text-align: left; }
+
 form input, form button {
   display: block;
   width: 100%;
@@ -142,13 +132,7 @@ form button {
   transition: background 0.3s ease;
 }
 
-form button:hover {
-  background: #333;
-}
-
-#rsvp {
-  text-align: left;
-}
+form button:hover { background: #333; }
 
 footer {
   font-size: 0.85rem;
@@ -159,15 +143,6 @@ footer {
 
 /* Responsive: stack columns on smaller screens (and rotation) */
 @media (max-width: 720px) {
-  .two-col {
-    grid-template-columns: 1fr;
-  }
-
-  header {
-    margin-bottom: 1rem;
-  }
-
-  #rsvp {
-    text-align: left;
-  }
+  .two-col { grid-template-columns: 1fr; }
+  .link-list { margin-top: 0.75rem; } /* remove the alignment offset when stacked */
 }
