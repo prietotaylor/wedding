@@ -5,97 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RSVP</title>
 
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; background:#fafafa; color:#111; }
-    .container { max-width: 760px; margin: 0 auto; }
-    h1 { margin: 0 0 14px; font-size: 28px; }
-    .muted { color:#666; font-size:14px; }
-    .card { background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:16px; box-shadow: 0 2px 10px rgba(0,0,0,.03); margin:14px 0; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; }
-    @media (max-width: 720px) { .row, .row3 { grid-template-columns: 1fr; } }
-    label { display:block; font-weight:700; margin-bottom:6px; }
-    input[type="text"], textarea {
-      width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #dcdcdc;
-      border-radius:10px; font-size:16px; background:#fff;
-    }
-    textarea { min-height:72px; resize: vertical; }
-    button {
-      border:0; border-radius:12px; padding:10px 14px; font-size:16px; font-weight:800;
-      cursor:pointer; background:#111; color:#fff;
-    }
-    button[disabled] { opacity:.6; cursor:not-allowed; }
-    .error { color:#b00020; font-weight:700; }
-    .success { color:#0b6b2f; font-weight:900; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .guest { border:1px solid #ededed; border-radius:12px; padding:12px; margin:12px 0; background:#fcfcfc; }
-    .guest-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-    .guest-name { font-size:18px; font-weight:900; }
-    .radio { display:flex; gap:10px; align-items:center; }
-    .radio label { font-weight:700; margin:0; }
-    .small { font-size:13px; color:#777; }
-  </style>
-
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* Small additions that fit your theme */
+    #status, #lookupError, #saveError, #saveSuccess { margin-top: 0.75rem; }
+    #lookupError, #saveError { font-weight: 700; }
+    #saveSuccess { font-weight: 700; }
+
+    .guest {
+      width: 100%;
+      border: 1px solid #000;
+      background: #fff;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: left;
+    }
+    .guest h2 {
+      font-size: 1rem;
+      margin: 0 0 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .guest .attending {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin: 0.5rem 0 1rem;
+      letter-spacing: 0.05em;
+    }
+    .guest label { display: block; margin-top: 0.75rem; font-weight: 600; letter-spacing: 0.05em; }
+    .guest textarea {
+      width: min(680px, 100%);
+      border: 1px solid #000;
+      font-family: inherit;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      padding: 0.75rem;
+      margin-top: 0.35rem;
+      min-height: 72px;
+    }
+
+    /* Make the RSVP action buttons follow your form button look */
+    #rsvpActions button { width: min(340px, 100%); }
+  </style>
 </head>
 
 <body>
-  <div class="container">
+  <div class="page" id="rsvp">
     <h1>RSVP</h1>
-    <p class="muted">please enter your first and last name and zip code to enter or update your response</p>
+    <p>please enter your first and last name and zip code to enter or update your response</p>
 
-    <div class="card" id="lookupCard">
-      <div class="row3">
-        <div>
-          <label for="firstName">first name</label>
-          <input id="firstName" type="text" autocomplete="given-name" placeholder="e.g., Sam" />
-        </div>
-        <div>
-          <label for="lastName">last name</label>
-          <input id="lastName" type="text" autocomplete="family-name" placeholder="e.g., Taylor" />
-        </div>
-        <div>
-          <label for="zip">ZIP code</label>
-          <input id="zip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="e.g., 94110" />
-        </div>
+    <form id="lookupForm" novalidate>
+      <input id="firstName" type="text" autocomplete="given-name" placeholder="first name" />
+      <input id="lastName" type="text" autocomplete="family-name" placeholder="last name" />
+      <input id="zip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="zip code" />
+      <button id="findBtn" type="submit">find my party</button>
+
+      <p id="status" class="muted"></p>
+      <p id="lookupError" style="display:none;"></p>
+    </form>
+
+    <div id="rsvpCard" style="display:none; width:100%;">
+      <h2 id="partyLabel"></h2>
+      <p id="partyMeta" class="muted"></p>
+
+      <a href="#" id="startOverBtn" class="small-box-link" style="margin-top: 0.75rem;">start over</a>
+
+      <div id="guestList" style="margin-top: 1rem;"></div>
+
+      <div id="rsvpActions" style="margin-top: 1.25rem; display:flex; flex-direction:column; align-items:center;">
+        <button id="saveBtn" type="button">save RSVP</button>
+        <p id="saveStatus" class="muted"></p>
+        <p id="saveError" style="display:none;"></p>
+        <p id="saveSuccess" style="display:none;">saved! thank you.</p>
       </div>
-
-      <div class="actions" style="margin-top:12px;">
-        <button id="findBtn">find my party</button>
-        <span id="status" class="muted"></span>
-      </div>
-
-      <p id="lookupError" class="error" style="display:none; margin-top:10px;"></p>
-    </div>
-
-    <div class="card" id="rsvpCard" style="display:none;">
-      <div class="guest-top">
-        <div>
-          <div id="partyLabel" style="font-weight: 1000; font-size: 20px;"></div>
-          <div id="partyMeta" class="small"></div>
-        </div>
-        <button id="startOverBtn" type="button" style="background:#444;">start over</button>
-      </div>
-
-      <div id="guestList" style="margin-top:12px;"></div>
-
-      <div class="actions" style="margin-top:14px;">
-        <button id="saveBtn">save RSVP</button>
-        <span id="saveStatus" class="muted"></span>
-      </div>
-
-      <p id="saveError" class="error" style="display:none; margin-top:10px;"></p>
-      <p id="saveSuccess" class="success" style="display:none; margin-top:10px;">saved! thank you.</p>
     </div>
   </div>
 
   <script>
-    // Put your values here
     const SUPABASE_URL = "https://pdtitxnlpgebzfulnsac.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7_cRJ3liQkWWnckseJunwQ_CGHG_xIC";
-    const supabaseClient = supabase.createClient(https://pdtitxnlpgebzfulnsac.supabase.co, sb_publishable_7_cRJ3liQkWWnckseJunwQ_CGHG_xIC);
+
+    // ✅ FIXED: use variables (strings)
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Elements
+    const lookupForm = document.getElementById("lookupForm");
     const firstNameEl = document.getElementById("firstName");
     const lastNameEl = document.getElementById("lastName");
     const zipEl = document.getElementById("zip");
@@ -163,7 +160,8 @@
       guestsInParty = [];
     }
 
-    function startOver() {
+    function startOver(e) {
+      if (e) e.preventDefault();
       resetUI();
       firstNameEl.value = "";
       lastNameEl.value = "";
@@ -172,8 +170,8 @@
     }
 
     function renderPartyAndGuests() {
-      partyLabelEl.textContent = selectedParty?.label || "your party";
-      partyMetaEl.textContent = `ZIP: ${selectedParty?.zip ?? ""}`;
+      partyLabelEl.textContent = (selectedParty?.label || "your party").toUpperCase();
+      partyMetaEl.textContent = `zip: ${selectedParty?.zip ?? ""}`;
 
       guestListEl.innerHTML = "";
       guestsInParty.forEach((g) => {
@@ -184,25 +182,26 @@
         div.dataset.guestId = g.id;
 
         div.innerHTML = `
-          <div class="guest-top">
-            <div class="guest-name">${escapeHtml(g.display_name || "guest")}</div>
-            <div class="radio" role="group" aria-label="attending">
-              <label><input type="radio" name="attending-${g.id}" value="yes" ${attendingVal === "yes" ? "checked" : ""}> yes</label>
-              <label><input type="radio" name="attending-${g.id}" value="no" ${attendingVal === "no" ? "checked" : ""}> no</label>
-            </div>
+          <h2>${escapeHtml(g.display_name || "guest")}</h2>
+
+          <div class="attending" role="group" aria-label="attending">
+            <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
+              <input type="radio" name="attending-${g.id}" value="yes" ${attendingVal === "yes" ? "checked" : ""}>
+              yes
+            </label>
+            <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
+              <input type="radio" name="attending-${g.id}" value="no" ${attendingVal === "no" ? "checked" : ""}>
+              no
+            </label>
           </div>
 
-          <div class="row" style="margin-top:10px;">
-            <div>
-              <label for="diet-${g.id}">Dietary restrictions</label>
-              <textarea id="diet-${g.id}" placeholder="e.g., vegetarian, nut allergy">${escapeHtml(g.dietary_restrictions || "")}</textarea>
-            </div>
-            <div>
-              <label for="notes-${g.id}">Notes</label>
-              <textarea id="notes-${g.id}" placeholder="anything else we should know?">${escapeHtml(g.guest_notes || "")}</textarea>
-            </div>
-          </div>
+          <label for="diet-${g.id}">dietary restrictions</label>
+          <textarea id="diet-${g.id}" placeholder="e.g., vegetarian, nut allergy">${escapeHtml(g.dietary_restrictions || "")}</textarea>
+
+          <label for="notes-${g.id}">notes</label>
+          <textarea id="notes-${g.id}" placeholder="anything else we should know?">${escapeHtml(g.guest_notes || "")}</textarea>
         `;
+
         guestListEl.appendChild(div);
       });
 
@@ -221,13 +220,12 @@
 
       if (!firstNorm) return setLookupError("please enter a first name.");
       if (!lastNorm) return setLookupError("please enter a last name.");
-      if (!zip) return setLookupError("please enter a ZIP code.");
+      if (!zip) return setLookupError("please enter a zip code.");
 
       findBtn.disabled = true;
       statusEl.textContent = "searching...";
 
       try {
-        // 1) Find a guest that matches first+last, joined to parties filtered by zip
         const { data: matches, error: matchErr } = await supabaseClient
           .from("guests")
           .select(`
@@ -243,11 +241,10 @@
         if (matchErr) throw matchErr;
 
         if (!matches || matches.length === 0) {
-          setLookupError("we couldn't find your party. please check the spelling and ZIP and try again.");
+          setLookupError("we couldn't find your party. please check spelling + zip and try again.");
           return;
         }
 
-        // If somehow multiple parties match the exact same person+zip (rare), block and ask for help
         const partyIds = Array.from(new Set(matches.map(m => m.party_id)));
         if (partyIds.length !== 1) {
           setLookupError("we found multiple possible matches. please contact us for help.");
@@ -257,7 +254,6 @@
         const partyId = partyIds[0];
         selectedParty = matches[0].parties;
 
-        // 2) Load ALL guests in that party
         const { data: guests, error: guestsErr } = await supabaseClient
           .from("guests")
           .select("id, party_id, display_name, attending, dietary_restrictions, guest_notes")
@@ -265,13 +261,13 @@
           .order("id", { ascending: true });
 
         if (guestsErr) throw guestsErr;
-        guestsInParty = guests || [];
 
+        guestsInParty = guests || [];
         renderPartyAndGuests();
 
       } catch (e) {
         console.error(e);
-        setLookupError("something went wrong while searching. please try again.");
+        setLookupError("something went wrong while searching. check the console for details.");
       } finally {
         statusEl.textContent = "";
         findBtn.disabled = false;
@@ -284,7 +280,7 @@
       saveStatusEl.textContent = "";
 
       if (!selectedParty?.id) {
-        setSaveError("No party loaded.");
+        setSaveError("no party loaded.");
         return;
       }
 
@@ -300,7 +296,6 @@
       try {
         const nowIso = new Date().toISOString();
 
-        // Build updates from DOM
         const updates = guestCards.map(card => {
           const guestId = card.dataset.guestId;
           const attendingRadio = card.querySelector(`input[name="attending-${guestId}"]:checked`);
@@ -320,7 +315,6 @@
           };
         });
 
-        // Update guests (simple + policy-friendly: per-row updates)
         const results = await Promise.all(
           updates.map(u => {
             const { id, ...payload } = u;
@@ -331,7 +325,6 @@
         const firstErr = results.map(r => r.error).find(Boolean);
         if (firstErr) throw firstErr;
 
-        // Update party timestamps
         const { error: partyErr } = await supabaseClient
           .from("parties")
           .update({ last_rsvp_at: nowIso, updated_at: nowIso })
@@ -343,24 +336,24 @@
         saveSuccessEl.style.display = "block";
       } catch (e) {
         console.error(e);
-        setSaveError("saving failed. please refresh and try again.");
+        setSaveError("saving failed. please refresh and try again. (see console for details)");
       } finally {
         saveBtn.disabled = false;
         saveStatusEl.textContent = "";
       }
     }
 
-    // Events
-    findBtn.addEventListener("click", findPartyByNameAndZip);
+    // Wire up events
+    lookupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      findPartyByNameAndZip();
+    });
+
     saveBtn.addEventListener("click", saveRSVP);
     startOverBtn.addEventListener("click", startOver);
-
-    // Enter key submits search
-    [firstNameEl, lastNameEl, zipEl].forEach(el => {
-      el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") findPartyByNameAndZip();
-      });
-    });
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
