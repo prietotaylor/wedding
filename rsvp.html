@@ -1,21 +1,366 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RSVP</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; background:#fafafa; color:#111; }
+    .container { max-width: 760px; margin: 0 auto; }
+    h1 { margin: 0 0 14px; font-size: 28px; }
+    .muted { color:#666; font-size:14px; }
+    .card { background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:16px; box-shadow: 0 2px 10px rgba(0,0,0,.03); margin:14px 0; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; }
+    @media (max-width: 720px) { .row, .row3 { grid-template-columns: 1fr; } }
+    label { display:block; font-weight:700; margin-bottom:6px; }
+    input[type="text"], textarea {
+      width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #dcdcdc;
+      border-radius:10px; font-size:16px; background:#fff;
+    }
+    textarea { min-height:72px; resize: vertical; }
+    button {
+      border:0; border-radius:12px; padding:10px 14px; font-size:16px; font-weight:800;
+      cursor:pointer; background:#111; color:#fff;
+    }
+    button[disabled] { opacity:.6; cursor:not-allowed; }
+    .error { color:#b00020; font-weight:700; }
+    .success { color:#0b6b2f; font-weight:900; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .guest { border:1px solid #ededed; border-radius:12px; padding:12px; margin:12px 0; background:#fcfcfc; }
+    .guest-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .guest-name { font-size:18px; font-weight:900; }
+    .radio { display:flex; gap:10px; align-items:center; }
+    .radio label { font-weight:700; margin:0; }
+    .small { font-size:13px; color:#777; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
-  <div class="page">
+  <div class="container">
+    <h1>RSVP</h1>
+    <p class="muted">please enter your first and last name and zip code to enter or update your response</p>
 
-   <a href="./" class="small-box-link">Home</a>
+    <div class="card" id="lookupCard">
+      <div class="row3">
+        <div>
+          <label for="firstName">first name</label>
+          <input id="firstName" type="text" autocomplete="given-name" placeholder="e.g., Sam" />
+        </div>
+        <div>
+          <label for="lastName">last name</label>
+          <input id="lastName" type="text" autocomplete="family-name" placeholder="e.g., Taylor" />
+        </div>
+        <div>
+          <label for="zip">ZIP code</label>
+          <input id="zip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="e.g., 94110" />
+        </div>
+      </div>
 
-    <h1>rsvp</h1> 
+      <div class="actions" style="margin-top:12px;">
+        <button id="findBtn">find my party</button>
+        <span id="status" class="muted"></span>
+      </div>
 
-    <p>please enter your name and zip code to provide or update your response:</p>
+      <p id="lookupError" class="error" style="display:none; margin-top:10px;"></p>
+    </div>
 
+    <div class="card" id="rsvpCard" style="display:none;">
+      <div class="guest-top">
+        <div>
+          <div id="partyLabel" style="font-weight: 1000; font-size: 20px;"></div>
+          <div id="partyMeta" class="small"></div>
+        </div>
+        <button id="startOverBtn" type="button" style="background:#444;">start over</button>
+      </div>
 
+      <div id="guestList" style="margin-top:12px;"></div>
+
+      <div class="actions" style="margin-top:14px;">
+        <button id="saveBtn">save RSVP</button>
+        <span id="saveStatus" class="muted"></span>
+      </div>
+
+      <p id="saveError" class="error" style="display:none; margin-top:10px;"></p>
+      <p id="saveSuccess" class="success" style="display:none; margin-top:10px;">saved! thank you.</p>
+    </div>
   </div>
+
+  <script>
+    // Put your values here
+    const SUPABASE_URL = "https://pdtitxnlpgebzfulnsac.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7_cRJ3liQkWWnckseJunwQ_CGHG_xIC";
+    const supabaseClient = supabase.createClient(https://pdtitxnlpgebzfulnsac.supabase.co, sb_publishable_7_cRJ3liQkWWnckseJunwQ_CGHG_xIC);
+
+    // Elements
+    const firstNameEl = document.getElementById("firstName");
+    const lastNameEl = document.getElementById("lastName");
+    const zipEl = document.getElementById("zip");
+    const findBtn = document.getElementById("findBtn");
+    const statusEl = document.getElementById("status");
+    const lookupErrorEl = document.getElementById("lookupError");
+
+    const rsvpCard = document.getElementById("rsvpCard");
+    const partyLabelEl = document.getElementById("partyLabel");
+    const partyMetaEl = document.getElementById("partyMeta");
+    const guestListEl = document.getElementById("guestList");
+
+    const startOverBtn = document.getElementById("startOverBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const saveStatusEl = document.getElementById("saveStatus");
+    const saveErrorEl = document.getElementById("saveError");
+    const saveSuccessEl = document.getElementById("saveSuccess");
+
+    // State
+    let selectedParty = null;
+    let guestsInParty = [];
+
+    function normalizeName(s) {
+      return (s || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z\s'-]/g, "")
+        .replace(/\s+/g, " ");
+    }
+
+    function normalizeZip(s) {
+      return (s || "").trim();
+    }
+
+    function setLookupError(msg) {
+      lookupErrorEl.textContent = msg;
+      lookupErrorEl.style.display = msg ? "block" : "none";
+    }
+
+    function setSaveError(msg) {
+      saveErrorEl.textContent = msg;
+      saveErrorEl.style.display = msg ? "block" : "none";
+    }
+
+    function escapeHtml(s) {
+      return (s ?? "").toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function resetUI() {
+      statusEl.textContent = "";
+      setLookupError("");
+      setSaveError("");
+      saveStatusEl.textContent = "";
+      saveSuccessEl.style.display = "none";
+      rsvpCard.style.display = "none";
+      guestListEl.innerHTML = "";
+      selectedParty = null;
+      guestsInParty = [];
+    }
+
+    function startOver() {
+      resetUI();
+      firstNameEl.value = "";
+      lastNameEl.value = "";
+      zipEl.value = "";
+      firstNameEl.focus();
+    }
+
+    function renderPartyAndGuests() {
+      partyLabelEl.textContent = selectedParty?.label || "your party";
+      partyMetaEl.textContent = `ZIP: ${selectedParty?.zip ?? ""}`;
+
+      guestListEl.innerHTML = "";
+      guestsInParty.forEach((g) => {
+        const attendingVal = (g.attending === true) ? "yes" : (g.attending === false) ? "no" : "";
+
+        const div = document.createElement("div");
+        div.className = "guest";
+        div.dataset.guestId = g.id;
+
+        div.innerHTML = `
+          <div class="guest-top">
+            <div class="guest-name">${escapeHtml(g.display_name || "guest")}</div>
+            <div class="radio" role="group" aria-label="attending">
+              <label><input type="radio" name="attending-${g.id}" value="yes" ${attendingVal === "yes" ? "checked" : ""}> yes</label>
+              <label><input type="radio" name="attending-${g.id}" value="no" ${attendingVal === "no" ? "checked" : ""}> no</label>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label for="diet-${g.id}">Dietary restrictions</label>
+              <textarea id="diet-${g.id}" placeholder="e.g., vegetarian, nut allergy">${escapeHtml(g.dietary_restrictions || "")}</textarea>
+            </div>
+            <div>
+              <label for="notes-${g.id}">Notes</label>
+              <textarea id="notes-${g.id}" placeholder="anything else we should know?">${escapeHtml(g.guest_notes || "")}</textarea>
+            </div>
+          </div>
+        `;
+        guestListEl.appendChild(div);
+      });
+
+      rsvpCard.style.display = "block";
+      saveSuccessEl.style.display = "none";
+      setSaveError("");
+      saveStatusEl.textContent = "";
+    }
+
+    async function findPartyByNameAndZip() {
+      resetUI();
+
+      const firstNorm = normalizeName(firstNameEl.value);
+      const lastNorm = normalizeName(lastNameEl.value);
+      const zip = normalizeZip(zipEl.value);
+
+      if (!firstNorm) return setLookupError("please enter a first name.");
+      if (!lastNorm) return setLookupError("please enter a last name.");
+      if (!zip) return setLookupError("please enter a ZIP code.");
+
+      findBtn.disabled = true;
+      statusEl.textContent = "searching...";
+
+      try {
+        // 1) Find a guest that matches first+last, joined to parties filtered by zip
+        const { data: matches, error: matchErr } = await supabaseClient
+          .from("guests")
+          .select(`
+            id,
+            party_id,
+            parties!inner(id, zip, label)
+          `)
+          .eq("first_name_norm", firstNorm)
+          .eq("last_name_norm", lastNorm)
+          .eq("parties.zip", zip)
+          .limit(2);
+
+        if (matchErr) throw matchErr;
+
+        if (!matches || matches.length === 0) {
+          setLookupError("we couldn't find your party. please check the spelling and ZIP and try again.");
+          return;
+        }
+
+        // If somehow multiple parties match the exact same person+zip (rare), block and ask for help
+        const partyIds = Array.from(new Set(matches.map(m => m.party_id)));
+        if (partyIds.length !== 1) {
+          setLookupError("we found multiple possible matches. please contact us for help.");
+          return;
+        }
+
+        const partyId = partyIds[0];
+        selectedParty = matches[0].parties;
+
+        // 2) Load ALL guests in that party
+        const { data: guests, error: guestsErr } = await supabaseClient
+          .from("guests")
+          .select("id, party_id, display_name, attending, dietary_restrictions, guest_notes")
+          .eq("party_id", partyId)
+          .order("id", { ascending: true });
+
+        if (guestsErr) throw guestsErr;
+        guestsInParty = guests || [];
+
+        renderPartyAndGuests();
+
+      } catch (e) {
+        console.error(e);
+        setLookupError("something went wrong while searching. please try again.");
+      } finally {
+        statusEl.textContent = "";
+        findBtn.disabled = false;
+      }
+    }
+
+    async function saveRSVP() {
+      setSaveError("");
+      saveSuccessEl.style.display = "none";
+      saveStatusEl.textContent = "";
+
+      if (!selectedParty?.id) {
+        setSaveError("No party loaded.");
+        return;
+      }
+
+      const guestCards = Array.from(guestListEl.querySelectorAll(".guest"));
+      if (!guestCards.length) {
+        setSaveError("no guests to update.");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveStatusEl.textContent = "saving...";
+
+      try {
+        const nowIso = new Date().toISOString();
+
+        // Build updates from DOM
+        const updates = guestCards.map(card => {
+          const guestId = card.dataset.guestId;
+          const attendingRadio = card.querySelector(`input[name="attending-${guestId}"]:checked`);
+          const diet = card.querySelector(`#diet-${guestId}`).value ?? "";
+          const notes = card.querySelector(`#notes-${guestId}`).value ?? "";
+
+          let attending = null;
+          if (attendingRadio?.value === "yes") attending = true;
+          if (attendingRadio?.value === "no") attending = false;
+
+          return {
+            id: guestId,
+            attending,
+            dietary_restrictions: diet.trim() || null,
+            guest_notes: notes.trim() || null,
+            updated_at: nowIso
+          };
+        });
+
+        // Update guests (simple + policy-friendly: per-row updates)
+        const results = await Promise.all(
+          updates.map(u => {
+            const { id, ...payload } = u;
+            return supabaseClient.from("guests").update(payload).eq("id", id);
+          })
+        );
+
+        const firstErr = results.map(r => r.error).find(Boolean);
+        if (firstErr) throw firstErr;
+
+        // Update party timestamps
+        const { error: partyErr } = await supabaseClient
+          .from("parties")
+          .update({ last_rsvp_at: nowIso, updated_at: nowIso })
+          .eq("id", selectedParty.id);
+
+        if (partyErr) throw partyErr;
+
+        saveStatusEl.textContent = "";
+        saveSuccessEl.style.display = "block";
+      } catch (e) {
+        console.error(e);
+        setSaveError("saving failed. please refresh and try again.");
+      } finally {
+        saveBtn.disabled = false;
+        saveStatusEl.textContent = "";
+      }
+    }
+
+    // Events
+    findBtn.addEventListener("click", findPartyByNameAndZip);
+    saveBtn.addEventListener("click", saveRSVP);
+    startOverBtn.addEventListener("click", startOver);
+
+    // Enter key submits search
+    [firstNameEl, lastNameEl, zipEl].forEach(el => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") findPartyByNameAndZip();
+      });
+    });
+  </script>
 </body>
 </html>
