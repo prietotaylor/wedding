@@ -89,6 +89,12 @@ li {
   letter-spacing: 0.05em;
 }
 
+.home-link {
+  align-self: center;     /* centers inside .page */
+  margin-bottom: 1rem;    /* space below the button */
+  font-size: 0.85rem;
+}
+
 /* ------------------------------------------
    Two-column layout
    ------------------------------------------ */
