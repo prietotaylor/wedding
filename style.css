@@ -62,8 +62,8 @@ body::before {
 
   display: flex;
   flex-direction: column;
-  align-items: center;   /* ✅ center all children horizontally */
-  text-align: center;    /* ✅ center all text */
+  align-items: center;   /* center all children horizontally */
+  text-align: center;    /* center all text */
 }
 
 /* Consistent vertical rhythm */
@@ -103,7 +103,7 @@ li {
 
   display: flex;
   flex-direction: column;
-  align-items: center; /* ✅ centers each li/a horizontally */
+  align-items: center; /* centers each li/a horizontally */
   gap: 0.75rem;
 }
 
@@ -114,7 +114,7 @@ li {
   align-items: center;
   justify-content: center;
 
-  min-width: 240px;       /* ✅ makes boxes feel symmetric */
+  min-width: 240px;       /* makes boxes feel symmetric */
   max-width: 100%;
   padding: 0.35rem 0.75rem;
 
