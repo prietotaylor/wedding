@@ -231,7 +231,7 @@
           .select(`
             id,
             party_id,
-            parties!inner(id, zip, label)
+            parties!guests_party_id_fkey (id, zip, label)
           `)
           .eq("first_name_norm", firstNorm)
           .eq("last_name_norm", lastNorm)
