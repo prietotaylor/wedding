@@ -2,7 +2,7 @@
 
 /* ------------------------------------------
    Reset / Base
-   ------------------------------------------ */
+------------------------------------------ */
 *,
 *::before,
 *::after {
@@ -22,18 +22,15 @@ body {
   font-weight: 400;
   color: #000;
 
-  /* Background pattern */
   background-image: url("dg.png");
   background-repeat: repeat;
   background-position: center top;
   background-attachment: fixed;
   background-size: auto;
 
-  /* Better mobile viewport behavior */
   min-height: 100vh;
   min-height: 100dvh;
 
-  /* Center the whole layout */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,20 +39,20 @@ body {
 }
 
 /* ------------------------------------------
-   Faded overlay (visual only)
-   ------------------------------------------ */
+   Overlay
+------------------------------------------ */
 body::before {
   content: "";
-  position: fixed; /* fixed so it always covers the viewport */
+  position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.82); /* slightly stronger white */
   pointer-events: none;
   z-index: 0;
 }
 
 /* ------------------------------------------
-   Page wrapper (content sits above overlay)
-   ------------------------------------------ */
+   Page wrapper (everything centered + symmetric)
+------------------------------------------ */
 .page {
   position: relative;
   z-index: 1;
@@ -63,21 +60,23 @@ body::before {
   width: min(100%, 980px);
   margin: 0 auto;
 
-  text-align: center;
   display: flex;
   flex-direction: column;
+  align-items: center;   /* ✅ center all children horizontally */
+  text-align: center;    /* ✅ center all text */
+}
+
+/* Consistent vertical rhythm */
+.page > * + * {
+  margin-top: 1.25rem;
 }
 
 /* ------------------------------------------
    Typography
-   ------------------------------------------ */
-header {
-  margin-bottom: 1.25rem;
-}
-
+------------------------------------------ */
 h1,
 h2 {
-  margin: 0 0 0.75rem;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -87,96 +86,50 @@ li {
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: 0.05em;
-}
-
-.home-link {
-  align-self: center;     /* centers inside .page */
-  margin-bottom: 1rem;    /* space below the button */
-  font-size: 0.85rem;
+  margin: 0;
 }
 
 /* ------------------------------------------
-   Two-column layout
-   ------------------------------------------ */
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(260px, 340px));
-  gap: 1rem;
-
-  justify-content: center; /* center both columns as a unit */
-  align-items: start;
-
-  width: 100%;
-  margin: 1.5rem auto;
-}
-
-/* Left-align content inside columns */
-#schedule,
+   Links list (perfectly centered)
+------------------------------------------ */
 .link-panel {
-  text-align: left;
+  width: 100%;
 }
 
-/* ------------------------------------------
-   Schedule list
-   ------------------------------------------ */
-#schedule ul {
-  list-style: none;
-  margin: 0.5rem 0 0;
-  padding: 0;
-}
-
-#schedule li {
-  margin-bottom: 0.5rem;
-}
-
-/* ------------------------------------------
-   Links list
-   ------------------------------------------ */
 .link-list {
   list-style: none;
-  margin: 2.25rem 0 0; /* aligns with schedule list under h2 */
   padding: 0;
+  margin: 0;
 
   display: flex;
   flex-direction: column;
+  align-items: center; /* ✅ centers each li/a horizontally */
   gap: 0.75rem;
 }
 
-/* Small individual white boxes for links */
-.link-list a {
-  display: inline-block; /* prevents one big box */
-  width: fit-content; /* hug the text */
-  max-width: 100%;
-
-  text-decoration: none;
-  color: #000;
-
-  background: #fff;
-  border: 1px solid #000;
-  padding: 0.25rem 0.5rem;
-
-  letter-spacing: 0.05em;
-  overflow-wrap: anywhere; /* prevent long text overflow */
-}
-
-.link-list a:hover,
-.link-list a:focus-visible {
-  background: #000;
-  color: #fff;
-}
-
-/* Reusable small boxed link (registry page, etc.) */
+/* Boxed links: centered, consistent width, symmetric */
+.link-list a,
 .small-box-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 240px;       /* ✅ makes boxes feel symmetric */
+  max-width: 100%;
+  padding: 0.35rem 0.75rem;
+
   background: #fff;
   border: 1px solid #000;
-  padding: 0.25rem 0.5rem;
+
   color: #000;
   text-decoration: none;
   letter-spacing: 0.05em;
+
   overflow-wrap: anywhere;
 }
 
+.link-list a:hover,
+.link-list a:focus-visible,
 .small-box-link:hover,
 .small-box-link:focus-visible {
   background: #000;
@@ -184,11 +137,10 @@ li {
 }
 
 /* ------------------------------------------
-   RSVP (centered)
-   ------------------------------------------ */
+   RSVP
+------------------------------------------ */
 #rsvp {
-  text-align: center;
-  margin-top: 1rem;
+  width: 100%;
 }
 
 #rsvp form {
@@ -200,10 +152,7 @@ li {
 /* Form controls */
 form input,
 form button {
-  display: block;
-  width: 100%;
-  max-width: 340px;
-
+  width: min(340px, 100%);
   margin: 0.5rem 0;
   padding: 0.75rem;
 
@@ -239,34 +188,26 @@ form button:focus-visible {
 
 /* ------------------------------------------
    Footer
-   ------------------------------------------ */
+------------------------------------------ */
 footer {
   font-size: 0.85rem;
-  margin-top: 1.5rem;
   opacity: 0.75;
-  text-align: center;
 }
 
 /* ------------------------------------------
-   Responsive
-   ------------------------------------------ */
+   Mobile
+------------------------------------------ */
 @media (max-width: 720px) {
   body {
-    align-items: flex-start; /* easier scrolling on small screens */
+    align-items: flex-start;
   }
 
-  .two-col {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .page {
+    width: min(100%, 520px);
   }
 
-  .link-list {
-    margin-top: 0.75rem;
-  }
-
-  #schedule,
-  .link-panel {
-    max-width: 520px;
-    margin: 0 auto;
+  .link-list a,
+  .small-box-link {
+    min-width: min(240px, 100%);
   }
 }
