@@ -62,7 +62,10 @@ body::before {
 
   width: min(100%, 980px);
   margin: 0 auto;
-  text-align: center; /* overall centered feel */
+
+  text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ------------------------------------------
