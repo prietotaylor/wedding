@@ -48,7 +48,7 @@ body::before {
   content: "";
   position: fixed; /* fixed so it always covers the viewport */
   inset: 0;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.8);
   pointer-events: none;
   z-index: 0;
 }
