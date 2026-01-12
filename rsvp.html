@@ -35,7 +35,12 @@
       margin: 0.5rem 0 1rem;
       letter-spacing: 0.05em;
     }
-    .guest label { display: block; margin-top: 0.75rem; font-weight: 600; letter-spacing: 0.05em; }
+    .guest label {
+      display: block;
+      margin-top: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
     .guest textarea {
       width: min(680px, 100%);
       border: 1px solid #000;
@@ -88,7 +93,6 @@
     const SUPABASE_URL = "https://pdtitxnlpgebzfulnsac.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7_cRJ3liQkWWnckseJunwQ_CGHG_xIC";
 
-    // ✅ FIXED: use variables (strings)
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Elements
@@ -125,8 +129,11 @@
         .replace(/\s+/g, " ");
     }
 
+    // Use 5-digit ZIP to avoid ZIP+4 mismatches
     function normalizeZip(s) {
-      return (s || "").trim();
+      const z = (s || "").trim();
+      const m = z.match(/^(\d{5})/);
+      return m ? m[1] : "";
     }
 
     function setLookupError(msg) {
@@ -137,6 +144,10 @@
     function setSaveError(msg) {
       saveErrorEl.textContent = msg;
       saveErrorEl.style.display = msg ? "block" : "none";
+    }
+
+    function setSaveSuccess(show) {
+      saveSuccessEl.style.display = show ? "block" : "none";
     }
 
     function escapeHtml(s) {
@@ -153,7 +164,7 @@
       setLookupError("");
       setSaveError("");
       saveStatusEl.textContent = "";
-      saveSuccessEl.style.display = "none";
+      setSaveSuccess(false);
       rsvpCard.style.display = "none";
       guestListEl.innerHTML = "";
       selectedParty = null;
@@ -206,7 +217,7 @@
       });
 
       rsvpCard.style.display = "block";
-      saveSuccessEl.style.display = "none";
+      setSaveSuccess(false);
       setSaveError("");
       saveStatusEl.textContent = "";
     }
@@ -215,28 +226,25 @@
       resetUI();
 
       const firstNorm = normalizeName(firstNameEl.value);
-      const lastNorm = normalizeName(lastNameEl.value);
-      const zip = normalizeZip(zipEl.value);
+      const lastNorm  = normalizeName(lastNameEl.value);
+      const zip       = normalizeZip(zipEl.value);
 
       if (!firstNorm) return setLookupError("please enter a first name.");
-      if (!lastNorm) return setLookupError("please enter a last name.");
-      if (!zip) return setLookupError("please enter a zip code.");
+      if (!lastNorm)  return setLookupError("please enter a last name.");
+      if (!zip)       return setLookupError("please enter a valid 5-digit zip code.");
 
       findBtn.disabled = true;
       statusEl.textContent = "searching...";
 
       try {
+        // Match entirely on guests table now: first+last+zip
         const { data: matches, error: matchErr } = await supabaseClient
           .from("guests")
-          .select(`
-            id,
-            party_id,
-            parties!guests_party_id_fkey (id, zip, label)
-          `)
+          .select("id, party_id, zip")
           .eq("first_name_norm", firstNorm)
           .eq("last_name_norm", lastNorm)
-          .eq("parties.zip", zip)
-          .limit(2);
+          .eq("zip", zip)
+          .limit(10);
 
         if (matchErr) throw matchErr;
 
@@ -247,13 +255,28 @@
 
         const partyIds = Array.from(new Set(matches.map(m => m.party_id)));
         if (partyIds.length !== 1) {
-          setLookupError("we found multiple possible matches. please contact us for help.");
+          setLookupError("we found multiple matches with that name + zip. please contact us for help.");
           return;
         }
 
         const partyId = partyIds[0];
-        selectedParty = matches[0].parties;
 
+        // Load party label/zip (optional; if blocked by RLS, fall back)
+        const { data: partyRow, error: partyErr } = await supabaseClient
+          .from("parties")
+          .select("id, zip, label")
+          .eq("id", partyId)
+          .maybeSingle();
+
+        if (!partyErr && partyRow) {
+          selectedParty = partyRow;
+        } else {
+          // fallback display if parties SELECT is restricted
+          selectedParty = { id: partyId, zip, label: "your party" };
+          if (partyErr) console.warn("party read blocked or failed (fallback used):", partyErr);
+        }
+
+        // Load all guests in that party
         const { data: guests, error: guestsErr } = await supabaseClient
           .from("guests")
           .select("id, party_id, display_name, attending, dietary_restrictions, guest_notes")
@@ -267,7 +290,7 @@
 
       } catch (e) {
         console.error(e);
-        setLookupError("something went wrong while searching. check the console for details.");
+        setLookupError(`something went wrong: ${e?.message || "see console"}`);
       } finally {
         statusEl.textContent = "";
         findBtn.disabled = false;
@@ -276,7 +299,7 @@
 
     async function saveRSVP() {
       setSaveError("");
-      saveSuccessEl.style.display = "none";
+      setSaveSuccess(false);
       saveStatusEl.textContent = "";
 
       if (!selectedParty?.id) {
@@ -315,6 +338,7 @@
           };
         });
 
+        // Update guests per-row (policy-friendly)
         const results = await Promise.all(
           updates.map(u => {
             const { id, ...payload } = u;
@@ -325,18 +349,21 @@
         const firstErr = results.map(r => r.error).find(Boolean);
         if (firstErr) throw firstErr;
 
-        const { error: partyErr } = await supabaseClient
+        // Update party timestamps (non-fatal if RLS blocks it)
+        const { error: partyUpdateErr } = await supabaseClient
           .from("parties")
           .update({ last_rsvp_at: nowIso, updated_at: nowIso })
           .eq("id", selectedParty.id);
 
-        if (partyErr) throw partyErr;
+        if (partyUpdateErr) {
+          console.warn("party timestamp update failed (non-fatal):", partyUpdateErr);
+        }
 
         saveStatusEl.textContent = "";
-        saveSuccessEl.style.display = "block";
+        setSaveSuccess(true);
       } catch (e) {
         console.error(e);
-        setSaveError("saving failed. please refresh and try again. (see console for details)");
+        setSaveError(`saving failed: ${e?.message || "see console"}`);
       } finally {
         saveBtn.disabled = false;
         saveStatusEl.textContent = "";
