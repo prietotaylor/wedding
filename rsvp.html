@@ -54,6 +54,47 @@
 
     /* Make the RSVP action buttons follow your form button look */
     #rsvpActions button { width: min(340px, 100%); }
+
+/* Make buttons match .small-box-link (boxed hyperlink style) */
+button.small-box-link.btn-link {
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 240px;
+  max-width: 100%;
+  padding: 0.35rem 0.75rem;
+
+  /* match link spacing */
+  margin: 0;
+}
+
+/* Hover/focus should mimic your link hover */
+button.small-box-link.btn-link:hover,
+button.small-box-link.btn-link:focus-visible {
+  background: #000;
+  color: #fff;
+}
+
+/* Disabled state */
+button.small-box-link.btn-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+    
   </style>
 </head>
 
@@ -66,7 +107,7 @@
       <input id="firstName" type="text" autocomplete="given-name" placeholder="first name" />
       <input id="lastName" type="text" autocomplete="family-name" placeholder="last name" />
       <input id="zip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="zip code" />
-      <button id="findBtn" type="submit">find my party</button>
+      <button id="findBtn" type="submit" class="small-box-link btn-link">find my party</button>
 
       <p id="status" class="muted"></p>
       <p id="lookupError" style="display:none;"></p>
@@ -81,7 +122,7 @@
       <div id="guestList" style="margin-top: 1rem;"></div>
 
       <div id="rsvpActions" style="margin-top: 1.25rem; display:flex; flex-direction:column; align-items:center;">
-        <button id="saveBtn" type="button">save RSVP</button>
+        <button id="saveBtn" type="button" class="small-box-link btn-link">save RSVP</button>
         <p id="saveStatus" class="muted"></p>
         <p id="saveError" style="display:none;"></p>
         <p id="saveSuccess" style="display:none;">saved! thank you.</p>
