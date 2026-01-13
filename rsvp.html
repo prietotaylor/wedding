@@ -165,12 +165,25 @@ button.small-box-link.btn-link:disabled {
   return (s || "")
     .trim()
     .toLowerCase()
-    // convert “smart” apostrophes/quotes to plain apostrophe
+
+    // Normalize “smart” apostrophes/quotes to plain apostrophe
     .replace(/[’‘`´]/g, "'")
+
+    // Normalize all common dash/hyphen variants to a plain hyphen
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212\uFE58\uFE63\uFF0D]/g, "-")
+
+    // Unicode normalize + remove diacritics (José -> Jose)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z\s'-]/g, "")
-    .replace(/\s+/g, " ");
+
+    // Remove apostrophes and hyphens entirely
+    .replace(/['-]/g, "")
+
+    // Remove spaces entirely (so "smith jones" -> "smithjones")
+    .replace(/\s+/g, "")
+
+    // Keep only letters a-z
+    .replace(/[^a-z]/g, "");
 }
 
     // Use 5-digit ZIP to avoid ZIP+4 mismatches
