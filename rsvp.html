@@ -162,14 +162,16 @@ button.small-box-link.btn-link:disabled {
     let guestsInParty = [];
 
     function normalizeName(s) {
-      return (s || "")
-        .trim()
-        .toLowerCase()
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z\s'-]/g, "")
-        .replace(/\s+/g, " ");
-    }
+  return (s || "")
+    .trim()
+    .toLowerCase()
+    // convert “smart” apostrophes/quotes to plain apostrophe
+    .replace(/[’‘`´]/g, "'")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z\s'-]/g, "")
+    .replace(/\s+/g, " ");
+}
 
     // Use 5-digit ZIP to avoid ZIP+4 mismatches
     function normalizeZip(s) {
