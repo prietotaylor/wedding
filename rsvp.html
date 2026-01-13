@@ -100,6 +100,12 @@ body.rsvp-body {
   justify-content: flex-start;
   padding-top: clamp(1rem, 3vw, 2rem);
 }
+
+    .attending-label {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
     
   </style>
 </head>
@@ -257,6 +263,8 @@ body.rsvp-body {
 
         div.innerHTML = `
           <h2>${escapeHtml(g.display_name || "guest")}</h2>
+
+          <p class="attending-label">attending?</p>
 
           <div class="attending" role="group" aria-label="attending">
             <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
