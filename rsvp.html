@@ -94,11 +94,17 @@ button.small-box-link.btn-link:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+    /* RSVP page override: don't vertically center long content */
+body.rsvp-body {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: clamp(1rem, 3vw, 2rem);
+}
     
   </style>
 </head>
 
-<body>
+<body class="rsvp-body">
   <div class="page" id="rsvp">
     <a href="./" class="small-box-link">Home</a> 
     <h1>RSVP</h1>
