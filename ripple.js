@@ -12,7 +12,10 @@
     antialias: false,
     premultipliedAlpha: false
   });
-  if (!gl) return;
+  if (!gl) {
+    console.warn("[membrane] WebGL context unavailable.");
+    return;
+  }
 
   const image = new Image();
   image.src = "dg.png";
@@ -86,6 +89,8 @@
     uniform vec2 u_imageSize;
     uniform vec2 u_offset;
     uniform float u_refraction;
+    uniform float u_time;
+    uniform float u_chroma;
 
     float decode(float v) {
       return v * 2.0 - 1.0;
@@ -99,16 +104,32 @@
       float height = heightAt(v_uv);
       float hx = heightAt(v_uv + vec2(u_texel.x, 0.0)) - heightAt(v_uv - vec2(u_texel.x, 0.0));
       float hy = heightAt(v_uv + vec2(0.0, u_texel.y)) - heightAt(v_uv - vec2(0.0, u_texel.y));
+      float slope = length(vec2(hx, hy));
 
-      vec2 offset = vec2(hx, -hy) * u_refraction;
-      vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y) + offset;
+      float pulse = 0.5 + 0.5 * sin(u_time * 0.6);
+      float refraction = u_refraction * mix(0.85, 1.2, pulse);
+      vec2 offset = vec2(hx, -hy) * refraction;
+      vec2 base = vec2(v_uv.x, 1.0 - v_uv.y);
+      vec2 chroma = offset * u_chroma;
+      vec2 uvG = base + offset;
+      vec2 uvR = base + offset + chroma;
+      vec2 uvB = base + offset - chroma;
 
-      vec2 pixel = uv * u_canvasSize + u_offset;
-      vec2 tileUV = fract(pixel / u_imageSize);
+      vec2 pixelR = uvR * u_canvasSize + u_offset;
+      vec2 pixelG = uvG * u_canvasSize + u_offset;
+      vec2 pixelB = uvB * u_canvasSize + u_offset;
+      vec2 tileR = fract(pixelR / u_imageSize);
+      vec2 tileG = fract(pixelG / u_imageSize);
+      vec2 tileB = fract(pixelB / u_imageSize);
 
-      vec4 color = texture2D(u_image, tileUV);
-      float shade = clamp(0.6 + height * 0.6, 0.35, 1.0);
-      gl_FragColor = vec4(color.rgb * shade, 1.0);
+      vec3 color = vec3(
+        texture2D(u_image, tileR).r,
+        texture2D(u_image, tileG).g,
+        texture2D(u_image, tileB).b
+      );
+      float shade = clamp(1.02 + height * 0.6 + slope * 1.4 + (pulse - 0.5) * 0.1, 0.78, 1.7);
+      vec3 lit = mix(color, vec3(1.0), 0.32);
+      gl_FragColor = vec4(lit * shade, 0.9);
     }
   `;
 
@@ -117,7 +138,8 @@
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error(gl.getShaderInfoLog(shader));
+      console.error("[membrane] Shader compile failed:", gl.getShaderInfoLog(shader));
+      console.error("[membrane] Shader source:\n", source);
       gl.deleteShader(shader);
       return null;
     }
@@ -133,16 +155,32 @@
     gl.attachShader(program, fs);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error(gl.getProgramInfoLog(program));
+      console.error("[membrane] Program link failed:", gl.getProgramInfoLog(program));
       gl.deleteProgram(program);
       return null;
     }
     return program;
   }
 
+  const sanityFragmentSrc = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+    varying vec2 v_uv;
+    void main() {
+      gl_FragColor = vec4(v_uv, 0.5, 1.0);
+    }
+  `;
+
   const simProgram = createProgram(vertexSrc, simFragmentSrc);
   const renderProgram = createProgram(vertexSrc, renderFragmentSrc);
-  if (!simProgram || !renderProgram) return;
+  const sanityProgram = createProgram(vertexSrc, sanityFragmentSrc);
+  if (!simProgram || !renderProgram || !sanityProgram) {
+    console.warn("[membrane] Shader program creation failed.");
+    return;
+  }
 
   const quadBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
@@ -165,6 +203,10 @@
     position: gl.getAttribLocation(renderProgram, "a_position"),
     uv: gl.getAttribLocation(renderProgram, "a_uv")
   };
+  const sanityAttribs = {
+    position: gl.getAttribLocation(sanityProgram, "a_position"),
+    uv: gl.getAttribLocation(sanityProgram, "a_uv")
+  };
 
   const simUniforms = {
     state: gl.getUniformLocation(simProgram, "u_state"),
@@ -182,8 +224,28 @@
     canvasSize: gl.getUniformLocation(renderProgram, "u_canvasSize"),
     imageSize: gl.getUniformLocation(renderProgram, "u_imageSize"),
     offset: gl.getUniformLocation(renderProgram, "u_offset"),
-    refraction: gl.getUniformLocation(renderProgram, "u_refraction")
+    refraction: gl.getUniformLocation(renderProgram, "u_refraction"),
+    time: gl.getUniformLocation(renderProgram, "u_time"),
+    chroma: gl.getUniformLocation(renderProgram, "u_chroma")
   };
+
+  function logProgramLocations(label, attribs, uniforms) {
+    Object.entries(attribs).forEach(([name, location]) => {
+      if (location === -1) {
+        console.warn(`[membrane] ${label} attrib missing: ${name}`);
+      } else {
+        console.info(`[membrane] ${label} attrib ${name}:`, location);
+      }
+    });
+    if (!uniforms) return;
+    Object.entries(uniforms).forEach(([name, location]) => {
+      if (location === null) {
+        console.warn(`[membrane] ${label} uniform missing: ${name}`);
+      } else {
+        console.info(`[membrane] ${label} uniform ${name}:`, location);
+      }
+    });
+  }
 
   function bindAttributes(attribs) {
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
@@ -226,8 +288,8 @@
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
@@ -249,27 +311,22 @@
   let canvasHeight = 0;
   let canvasCssWidth = 0;
   let canvasCssHeight = 0;
+  let canvasDpr = 1;
   let imageTexture = null;
 
   const impulses = [];
   const maxImpulses = 8;
+  let mode = "normal";
+  let lastMode = "normal";
+  let paused = false;
+  let rafId = 0;
+  let started = false;
+  let clearNextFrame = true;
+  let timeSeconds = 0;
 
   function setupSimulation() {
-    const scale = 0.35;
-    const minSize = 140;
-    const maxSize = 420;
-
-    const targetWidth = Math.max(
-      minSize,
-      Math.min(maxSize, Math.round(window.innerWidth * scale))
-    );
-    const targetHeight = Math.max(
-      minSize,
-      Math.min(maxSize, Math.round(window.innerHeight * scale))
-    );
-
-    simWidth = Math.max(2, targetWidth);
-    simHeight = Math.max(2, targetHeight);
+    simWidth = Math.max(2, canvas.width);
+    simHeight = Math.max(2, canvas.height);
 
     stateTextures = [
       createTexture(simWidth, simHeight, gl.NEAREST),
@@ -293,14 +350,15 @@
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
-    canvasCssWidth = window.innerWidth;
-    canvasCssHeight = window.innerHeight;
-    canvasWidth = Math.round(canvasCssWidth * dpr);
-    canvasHeight = Math.round(canvasCssHeight * dpr);
+    canvasDpr = dpr;
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    canvasCssWidth = canvas.clientWidth || window.innerWidth;
+    canvasCssHeight = canvas.clientHeight || window.innerHeight;
+    canvasWidth = Math.floor(canvasCssWidth * dpr);
+    canvasHeight = Math.floor(canvasCssHeight * dpr);
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
     gl.viewport(0, 0, canvasWidth, canvasHeight);
     setupSimulation();
   }
@@ -316,22 +374,24 @@
     );
     gl.uniform2f(
       renderUniforms.canvasSize,
-      canvasCssWidth,
-      canvasCssHeight
+      canvasWidth,
+      canvasHeight
     );
     gl.uniform2f(
       renderUniforms.imageSize,
-      image.width,
-      image.height
+      image.width * canvasDpr,
+      image.height * canvasDpr
     );
 
-    const offsetX = (canvasCssWidth - image.width) * 0.5;
+    const offsetX = (canvasCssWidth - image.width) * 0.5 * canvasDpr;
     gl.uniform2f(
       renderUniforms.offset,
       offsetX,
       0
     );
-    gl.uniform1f(renderUniforms.refraction, 0.015);
+    gl.uniform1f(renderUniforms.refraction, 0.03);
+    gl.uniform1f(renderUniforms.time, timeSeconds);
+    gl.uniform1f(renderUniforms.chroma, 1.6);
   }
 
   function updateSimUniforms(impulse) {
@@ -342,8 +402,8 @@
       1 / simWidth,
       1 / simHeight
     );
-    gl.uniform1f(simUniforms.damping, 0.99);
-    gl.uniform1f(simUniforms.speed, 0.5);
+    gl.uniform1f(simUniforms.damping, 0.995);
+    gl.uniform1f(simUniforms.speed, 0.4);
 
     if (impulse) {
       gl.uniform3f(
@@ -386,12 +446,61 @@
     gl.bindTexture(gl.TEXTURE_2D, imageTexture);
     updateRenderUniforms();
 
-    gl.viewport(0, 0, canvasWidth, canvasHeight);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  function renderSanity() {
+    gl.useProgram(sanityProgram);
+    bindAttributes(sanityAttribs);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
   let lastTime = 0;
+  let didLogStart = false;
   function tick(time) {
+    rafId = 0;
+    if (paused) return;
+    if (!didLogStart) {
+      console.info("[membrane] Render loop started.");
+      didLogStart = true;
+    }
+
+    gl.disable(gl.SCISSOR_TEST);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    timeSeconds = time * 0.001;
+
+    if (mode !== lastMode) {
+      clearNextFrame = true;
+      lastMode = mode;
+    }
+
+    if (mode === "clearRed") {
+      gl.disable(gl.BLEND);
+      gl.clearColor(1, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+
+    if (mode === "sanityGradient") {
+      gl.disable(gl.BLEND);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      renderSanity();
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+
+    if (clearNextFrame) {
+      gl.disable(gl.BLEND);
+      gl.clearColor(1, 1, 1, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      clearNextFrame = false;
+    }
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
     const delta = Math.min(48, time - lastTime);
     const steps = delta > 28 ? 2 : 1;
 
@@ -402,12 +511,12 @@
 
     render();
     lastTime = time;
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
 
   function queueImpulse(x, y) {
-    const strength = 0.6;
-    const radius = 0.025;
+    const strength = 0.85;
+    const radius = 0.033;
     impulses.push({ x, y, strength, radius });
     if (impulses.length > maxImpulses) impulses.shift();
   }
@@ -415,9 +524,10 @@
   function onPointerDown(event) {
     if (event.button !== undefined && event.button !== 0) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = 1 - (event.clientY - rect.top) / rect.height;
-    queueImpulse(x, y);
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+    const yFlipped = canvas.height - y;
+    queueImpulse(x / canvas.width, yFlipped / canvas.height);
   }
 
   function start() {
@@ -429,12 +539,50 @@
     document.addEventListener("pointerdown", onPointerDown);
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
-    requestAnimationFrame(tick);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.SCISSOR_TEST);
+
+    logProgramLocations("sim", simAttribs, simUniforms);
+    logProgramLocations("render", renderAttribs, renderUniforms);
+    logProgramLocations("sanity", sanityAttribs, null);
+
+    window.rippleDebug = {
+      pause() {
+        paused = true;
+      },
+      resume() {
+        if (!paused) return;
+        paused = false;
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      },
+      setMode(nextMode) {
+        if (!["normal", "clearRed", "sanityGradient"].includes(nextMode)) {
+          console.warn("[membrane] Unknown mode:", nextMode);
+          return;
+        }
+        mode = nextMode;
+        if (!rafId && !paused) rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
   }
 
-  if (image.complete) {
+  function startOnce() {
+    if (started) return;
+    started = true;
     start();
-  } else {
-    image.onload = start;
+  }
+
+  image.addEventListener("load", () => {
+    console.info(`[membrane] Image loaded: ${image.width}x${image.height}`);
+    startOnce();
+  });
+  image.addEventListener("error", (err) => {
+    console.error("[membrane] Image failed to load.", err);
+  });
+
+  if (image.complete) {
+    startOnce();
   }
 })();
