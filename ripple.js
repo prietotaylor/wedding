@@ -323,6 +323,10 @@
   let started = false;
   let clearNextFrame = true;
   let timeSeconds = 0;
+  let isDragging = false;
+  let dragPointerId = null;
+  let lastDragTime = 0;
+  const dragIntervalMs = 30;
 
   function setupSimulation() {
     simWidth = Math.max(2, canvas.width);
@@ -403,7 +407,7 @@
       1 / simHeight
     );
     gl.uniform1f(simUniforms.damping, 0.995);
-    gl.uniform1f(simUniforms.speed, 0.4);
+    gl.uniform1f(simUniforms.speed, 0.3);
 
     if (impulse) {
       gl.uniform3f(
@@ -514,9 +518,7 @@
     rafId = requestAnimationFrame(tick);
   }
 
-  function queueImpulse(x, y) {
-    const strength = 0.85;
-    const radius = 0.033;
+  function queueImpulse(x, y, strength = 0.85, radius = 0.02) {
     impulses.push({ x, y, strength, radius });
     if (impulses.length > maxImpulses) impulses.shift();
   }
@@ -528,6 +530,34 @@
     const y = (event.clientY - rect.top) * (canvas.height / rect.height);
     const yFlipped = canvas.height - y;
     queueImpulse(x / canvas.width, yFlipped / canvas.height);
+    isDragging = true;
+    dragPointerId = event.pointerId ?? null;
+    lastDragTime = performance.now();
+    if (canvas.setPointerCapture && event.pointerId != null) {
+      canvas.setPointerCapture(event.pointerId);
+    }
+  }
+
+  function onPointerMove(event) {
+    if (!isDragging) return;
+    if (dragPointerId != null && event.pointerId !== dragPointerId) return;
+    const now = performance.now();
+    if (now - lastDragTime < dragIntervalMs) return;
+    lastDragTime = now;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+    const yFlipped = canvas.height - y;
+    queueImpulse(x / canvas.width, yFlipped / canvas.height, 0.6, 0.02);
+  }
+
+  function onPointerUp(event) {
+    if (dragPointerId != null && event.pointerId !== dragPointerId) return;
+    isDragging = false;
+    dragPointerId = null;
+    if (canvas.releasePointerCapture && event.pointerId != null) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
   }
 
   function start() {
@@ -536,7 +566,10 @@
     imageTexture = createImageTexture(image);
     resize();
     window.addEventListener("resize", resize);
-    document.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointercancel", onPointerUp);
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
     gl.disable(gl.BLEND);
