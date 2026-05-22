@@ -45,13 +45,13 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.82); /* slightly stronger white */
+  background: rgba(255, 255, 255, 0.82);
   pointer-events: none;
   z-index: 0;
 }
 
 /* ------------------------------------------
-   Page wrapper (everything centered + symmetric)
+   Page wrapper
 ------------------------------------------ */
 .page {
   position: relative;
@@ -62,8 +62,8 @@ body::before {
 
   display: flex;
   flex-direction: column;
-  align-items: center;   /* center all children horizontally */
-  text-align: center;    /* center all text */
+  align-items: center;
+  text-align: center;
 }
 
 /* Consistent vertical rhythm */
@@ -90,7 +90,22 @@ li {
 }
 
 /* ------------------------------------------
-   Links list (perfectly centered)
+   Regular content bullet lists
+------------------------------------------ */
+.page > ul {
+  width: min(700px, 90%);
+  text-align: left;
+  list-style-position: outside;
+  padding-left: 1.5em;
+  margin: 0 auto 1.5rem;
+}
+
+.page > ul li {
+  margin-bottom: 0.5rem;
+}
+
+/* ------------------------------------------
+   Links list
 ------------------------------------------ */
 .link-panel {
   width: 100%;
@@ -103,18 +118,18 @@ li {
 
   display: flex;
   flex-direction: column;
-  align-items: center; /* centers each li/a horizontally */
+  align-items: center;
   gap: 0.75rem;
 }
 
-/* Boxed links: centered, consistent width, symmetric */
+/* Boxed links */
 .link-list a,
 .small-box-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-width: 240px;       /* makes boxes feel symmetric */
+  min-width: 240px;
   max-width: 100%;
   padding: 0.35rem 0.75rem;
 
@@ -209,5 +224,9 @@ footer {
   .link-list a,
   .small-box-link {
     min-width: min(240px, 100%);
+  }
+
+  .page > ul {
+    width: min(100%, 520px);
   }
 }
