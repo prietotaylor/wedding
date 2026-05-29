@@ -22,12 +22,14 @@
       margin-top: 1rem;
       text-align: left;
     }
+
     .guest h2 {
       font-size: 1rem;
       margin: 0 0 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
+
     .guest .attending {
       display: flex;
       gap: 1rem;
@@ -35,12 +37,14 @@
       margin: 0.5rem 0 1rem;
       letter-spacing: 0.05em;
     }
+
     .guest label {
       display: block;
       margin-top: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.05em;
     }
+
     .guest textarea {
       width: min(680px, 100%);
       border: 1px solid #000;
@@ -55,58 +59,58 @@
     /* Make the RSVP action buttons follow your form button look */
     #rsvpActions button { width: min(340px, 100%); }
 
-/* Make buttons match .small-box-link (boxed hyperlink style) */
-button.small-box-link.btn-link {
-  appearance: none;
-  -webkit-appearance: none;
+    /* Make buttons match .small-box-link (boxed hyperlink style) */
+    button.small-box-link.btn-link {
+      appearance: none;
+      -webkit-appearance: none;
 
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  letter-spacing: 0.05em;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
 
-  border: 1px solid #000;
-  background: #fff;
-  color: #000;
-  text-decoration: none;
+      border: 1px solid #000;
+      background: #fff;
+      color: #000;
+      text-decoration: none;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
-  min-width: 240px;
-  max-width: 100%;
-  padding: 0.35rem 0.75rem;
+      min-width: 240px;
+      max-width: 100%;
+      padding: 0.35rem 0.75rem;
 
-  /* match link spacing */
-  margin: 0;
-}
+      /* match link spacing */
+      margin: 0;
+    }
 
-/* Hover/focus should mimic your link hover */
-button.small-box-link.btn-link:hover,
-button.small-box-link.btn-link:focus-visible {
-  background: #000;
-  color: #fff;
-}
+    /* Hover/focus should mimic your link hover */
+    button.small-box-link.btn-link:hover,
+    button.small-box-link.btn-link:focus-visible {
+      background: #000;
+      color: #fff;
+    }
 
-/* Disabled state */
-button.small-box-link.btn-link:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+    /* Disabled state */
+    button.small-box-link.btn-link:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     /* RSVP page override: don't vertically center long content */
-body.rsvp-body {
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding-top: clamp(1rem, 3vw, 2rem);
-}
+    body.rsvp-body {
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding-top: clamp(1rem, 3vw, 2rem);
+    }
 
     .attending-label {
-  margin: 0.5rem 0 0.25rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
-}
-    
+      margin: 0.5rem 0 0.25rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 
@@ -174,29 +178,29 @@ body.rsvp-body {
     let guestsInParty = [];
 
     function normalizeName(s) {
-  return (s || "")
-    .trim()
-    .toLowerCase()
+      return (s || "")
+        .trim()
+        .toLowerCase()
 
-    // Normalize “smart” apostrophes/quotes to plain apostrophe
-    .replace(/[’‘`´]/g, "'")
+        // Normalize “smart” apostrophes/quotes to plain apostrophe
+        .replace(/[’‘`´]/g, "'")
 
-    // Normalize all common dash/hyphen variants to a plain hyphen
-    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212\uFE58\uFE63\uFF0D]/g, "-")
+        // Normalize all common dash/hyphen variants to a plain hyphen
+        .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212\uFE58\uFE63\uFF0D]/g, "-")
 
-    // Unicode normalize + remove diacritics (José -> Jose)
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+        // Unicode normalize + remove diacritics (José -> Jose)
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
 
-    // Remove apostrophes and hyphens entirely
-    .replace(/['-]/g, "")
+        // Remove apostrophes and hyphens entirely
+        .replace(/['-]/g, "")
 
-    // Remove spaces entirely (so "smith jones" -> "smithjones")
-    .replace(/\s+/g, "")
+        // Remove spaces entirely (so "smith jones" -> "smithjones")
+        .replace(/\s+/g, "")
 
-    // Keep only letters a-z
-    .replace(/[^a-z]/g, "");
-}
+        // Keep only letters a-z
+        .replace(/[^a-z]/g, "");
+    }
 
     // Use 5-digit ZIP to avoid ZIP+4 mismatches
     function normalizeZip(s) {
@@ -254,7 +258,9 @@ body.rsvp-body {
       partyMetaEl.textContent = `zip: ${selectedParty?.zip ?? ""}`;
 
       guestListEl.innerHTML = "";
+
       guestsInParty.forEach((g) => {
+        const nbfAttendingVal = (g.nbfattending === true) ? "yes" : (g.nbfattending === false) ? "no" : "";
         const attendingVal = (g.attending === true) ? "yes" : (g.attending === false) ? "no" : "";
 
         const div = document.createElement("div");
@@ -264,9 +270,22 @@ body.rsvp-body {
         div.innerHTML = `
           <h2>${escapeHtml(g.display_name || "guest")}</h2>
 
-          <p class="attending-label">attending?</p>
+          <p class="attending-label">attending night before?</p>
 
-          <div class="attending" role="group" aria-label="attending">
+          <div class="attending" role="group" aria-label="attending night before">
+            <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
+              <input type="radio" name="nbfattending-${g.id}" value="yes" ${nbfAttendingVal === "yes" ? "checked" : ""}>
+              yes
+            </label>
+            <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
+              <input type="radio" name="nbfattending-${g.id}" value="no" ${nbfAttendingVal === "no" ? "checked" : ""}>
+              no
+            </label>
+          </div>
+
+          <p class="attending-label">attending the wedding?</p>
+
+          <div class="attending" role="group" aria-label="attending the wedding">
             <label style="display:flex; gap:.5rem; align-items:center; margin:0;">
               <input type="radio" name="attending-${g.id}" value="yes" ${attendingVal === "yes" ? "checked" : ""}>
               yes
@@ -325,6 +344,7 @@ body.rsvp-body {
         }
 
         const partyIds = Array.from(new Set(matches.map(m => m.party_id)));
+
         if (partyIds.length !== 1) {
           setLookupError("we found multiple matches with that name + zip. please contact us for help.");
           return;
@@ -350,7 +370,7 @@ body.rsvp-body {
         // Load all guests in that party
         const { data: guests, error: guestsErr } = await supabaseClient
           .from("guests")
-          .select("id, party_id, display_name, attending, dietary_restrictions, guest_notes")
+          .select("id, party_id, display_name, attending, nbfattending, dietary_restrictions, guest_notes")
           .eq("party_id", partyId)
           .order("id", { ascending: true });
 
@@ -379,6 +399,7 @@ body.rsvp-body {
       }
 
       const guestCards = Array.from(guestListEl.querySelectorAll(".guest"));
+
       if (!guestCards.length) {
         setSaveError("no guests to update.");
         return;
@@ -392,9 +413,16 @@ body.rsvp-body {
 
         const updates = guestCards.map(card => {
           const guestId = card.dataset.guestId;
+
+          const nbfAttendingRadio = card.querySelector(`input[name="nbfattending-${guestId}"]:checked`);
           const attendingRadio = card.querySelector(`input[name="attending-${guestId}"]:checked`);
+
           const diet = card.querySelector(`#diet-${guestId}`).value ?? "";
           const notes = card.querySelector(`#notes-${guestId}`).value ?? "";
+
+          let nbfattending = null;
+          if (nbfAttendingRadio?.value === "yes") nbfattending = true;
+          if (nbfAttendingRadio?.value === "no") nbfattending = false;
 
           let attending = null;
           if (attendingRadio?.value === "yes") attending = true;
@@ -402,6 +430,7 @@ body.rsvp-body {
 
           return {
             id: guestId,
+            nbfattending,
             attending,
             dietary_restrictions: diet.trim() || null,
             guest_notes: notes.trim() || null,
@@ -432,6 +461,7 @@ body.rsvp-body {
 
         saveStatusEl.textContent = "";
         setSaveSuccess(true);
+
       } catch (e) {
         console.error(e);
         setSaveError(`saving failed: ${e?.message || "see console"}`);
